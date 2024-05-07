@@ -44,7 +44,9 @@ section .text
 main:
     push -11
     call GetStdHandle
-    mov [stdout], eax\n"""
+    mov [stdout], eax
+
+    """
 
     in_main = False
 
@@ -62,7 +64,7 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"""    push 0
+                    asm_code += f"""push 0
     push written
     push len
     push msg_{idx}
