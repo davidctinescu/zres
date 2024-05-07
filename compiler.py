@@ -10,7 +10,7 @@ extern ExitProcess
 global main
 
 section .data
-stdout dd 0
+stdout dq 0     ; QWORD instead of DWORD
 """
 
     in_main = False
@@ -30,21 +30,23 @@ stdout dd 0
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
                     asm_code += f"msg_{idx} db '{string}', 0xA, 0\n"
-                    asm_code += f"len equ $ - msg_{idx}"
+                    asm_code += f"len_{idx} equ $ - msg_{idx}"
             elif "exit" in line:
                 exit_code = line.strip().split(" ")[1].rstrip(';')
     
     asm_code += """
 
 section .bss
-written resd 1
+written resq 1      ; QWORD instead of DWORD
 
 section .text
 
 main:
-    push -11
+    sub rsp, 40     ; Function calls
+
+    mov rcx, -11    ; STD_OUTPUT_HANDLE
     call GetStdHandle
-    mov [stdout], eax
+    mov [stdout], rax
 
     """
 
@@ -64,14 +66,10 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"""push 0
-    push written
-    push len
-    push msg_{idx}
-    push qword [stdout]
-    call WriteConsoleA
-    
-    """
+                    asm_code += f"mov edx, len_{idx}\n"
+                    asm_code += f"mov rcx, msg_{idx}\n"
+                    asm_code += f"mov r8, [stdout]\n"
+                    asm_code += f"call WriteConsoleA\n"
             elif "exit" in line:
                 asm_code += f"mov eax, {exit_code}\n"
                 asm_code += f"    call ExitProcess\n"
