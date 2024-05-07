@@ -103,7 +103,7 @@ _start:\n"""
     return asm_code
 
 def generate_asm_windows(lines) -> str:
-    asm_code = """section .data:
+    asm_code = """section .data
 """
 
     in_main = False
@@ -151,13 +151,13 @@ def generate_asm_windows(lines) -> str:
             elif "exit" in line:
                 exit_code = line.strip().split(" ")[1].rstrip(';')
 
-    asm_code += """
-section .text:
+    asm_code += """  hStdOut dq 0
+
+section .text
   extern ExitProcess
   extern GetStdHandle
   extern WriteConsoleA
-
-global main
+  global main
 
 main:
   push -11
@@ -188,17 +188,17 @@ main:
                     string = re.search(r'out\((.*?)\)', line).group(1)
                     if string.startswith('"') and string.endswith('"'):
                         string = string[1:-1]
-                        asm_code += f"  mov ecx, edx\n"
                         asm_code += f"  lea rcx, [rel msg_{idx}]\n"
                         asm_code += f"  mov ebx, {len(string)}\n"
+                        asm_code += f"  mov ecx, edx\n"
                         asm_code += f"  call WriteConsoleA\n\n"
                     else:
                         content = variables.get(string)
                         if content is None:
                             raise ValueError(f"Variable '{string}' not declared")
-                        asm_code += f"  mov ecx, edx\n"
                         asm_code += f"  lea rcx, [rel {string}]\n"
                         asm_code += f"  mov ebx, {len(content)}\n"
+                        asm_code += f"  mov ecx, edx\n"
                         asm_code += f"  call WriteConsoleA\n\n"
                 else:
                     raise ValueError(f"Line {idx} has the wrong format for outputting")
