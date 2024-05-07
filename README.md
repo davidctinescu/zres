@@ -16,6 +16,7 @@ python ./src/compiler.py <input_file>
 - The file must have a `global main` declaration to mark the beginning of the main function.
 - Use `out("string")` to output strings.
 - Use `exit (code)` to exit with the code.
+- Use `var var_name = value` to declare variables (strings or integers)
 
 Example:
 ```plaintext
