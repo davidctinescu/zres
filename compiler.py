@@ -10,7 +10,8 @@ extern ExitProcess
 global main
 
 section .data
-stdout dq 0     ; QWORD instead of DWORD
+stdout dq 0  ; Change to quadword for 64-bit
+    
 """
 
     in_main = False
@@ -30,24 +31,25 @@ stdout dq 0     ; QWORD instead of DWORD
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
                     asm_code += f"msg_{idx} db '{string}', 0xA, 0\n"
-                    asm_code += f"len_{idx} equ $ - msg_{idx}"
+                    asm_code += f"len_{idx} equ $ - msg_{idx}\n"
             elif "exit" in line:
                 exit_code = line.strip().split(" ")[1].rstrip(';')
     
     asm_code += """
 
 section .bss
-written resq 1      ; QWORD instead of DWORD
+written resq 1  ; Change to quadword for 64-bit
 
 section .text
 
 main:
-    sub rsp, 40     ; Function calls
-
-    mov rcx, -11    ; STD_OUTPUT_HANDLE
+    sub rsp, 40  ; Adjust stack for function calls
+    
+    ; Get stdout handle
+    mov rcx, -11  ; STD_OUTPUT_HANDLE
     call GetStdHandle
-    mov [stdout], rax
-
+    mov [stdout], rax  ; Store handle
+    
     """
 
     in_main = False
@@ -72,7 +74,7 @@ main:
                     asm_code += f"call WriteConsoleA\n"
             elif "exit" in line:
                 asm_code += f"mov eax, {exit_code}\n"
-                asm_code += f"    call ExitProcess\n"
+                asm_code += f"call ExitProcess\n"
     
     return asm_code
 
