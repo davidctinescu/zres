@@ -103,7 +103,7 @@ _start:\n"""
     return asm_code
 
 def generate_asm_windows(lines) -> str:
-    asm_code = """section .data
+    asm_code = """section .data:
 """
 
     in_main = False
@@ -130,7 +130,7 @@ def generate_asm_windows(lines) -> str:
                     if output_content.startswith('"') and output_content.endswith('"'):
                         string = output_content[1:-1]
                         variables[f"msg_{idx}"] = string
-                        asm_code += f"msg_{idx} db '{string}', 0xA, 0\n"
+                        asm_code += f"  msg_{idx} db '{string}', 0xA, 0\n"
                     else:
                         if output_content in variables:
                             pass
@@ -145,17 +145,17 @@ def generate_asm_windows(lines) -> str:
                     var_value = var_value[1:-1]
                 if var_name not in variables:
                     variables[var_name] = var_value
-                    asm_code += f"{var_name} db '{var_value}', 0xA, 0\n"
+                    asm_code += f"  {var_name} db '{var_value}', 0xA, 0\n"
                 else:
                     raise ValueError(f"Variable '{var_name}' already declared")
             elif "exit" in line:
                 exit_code = line.strip().split(" ")[1].rstrip(';')
 
     asm_code += """
-section .text
-extern ExitProcess
-extern GetStdHandle
-extern WriteConsoleA
+section .text:
+    extern ExitProcess
+    extern GetStdHandle
+    extern WriteConsoleA
 
 global main
 
@@ -185,14 +185,14 @@ main:
                     if string.startswith('"') and string.endswith('"'):
                         string = string[1:-1]
                         asm_code += f"  mov rdx, {len(string)}\n"
-                        asm_code += f"  lea rcx, [msg_{idx}]\n"
+                        asm_code += f"  lea rcx, [msg_{idx} wrt ..rip]\n"
                         asm_code += f"  call WriteConsoleA\n\n"
                     else:
                         content = variables.get(string)
                         if content is None:
                             raise ValueError(f"Variable '{string}' not declared")
                         asm_code += f"  mov rdx, {len(content)}\n"
-                        asm_code += f"  lea rcx, [{string}]\n"
+                        asm_code += f"  lea rcx, [{string} wrt ..rip]\n"
                         asm_code += f"  call WriteConsoleA\n\n"
                 else:
                     raise ValueError(f"Line {idx} has the wrong format for outputting")
