@@ -137,7 +137,7 @@ _start:\n"""
     return asm_code
 
 def generate_asm(lines):
-    if os.name == 'posix':
+    if os.name == 'nt':
         return generate_asm_windows(lines)
     else:
         return generate_asm_linux(lines)
@@ -160,14 +160,14 @@ def compile_file(input_file):
         f.write(asm_code)
 
     
-    # if os.name == 'nt':
-    #     subprocess.run(['nasm.exe', '-f', 'win32', asm_file, '-o', obj_file], check=True)
-    #     subprocess.run(['link', '/SUBSYSTEM:CONSOLE', '/ENTRY:MAIN', obj_file, 'kernel32.lib', '/OUT:' + exe_file], check=True)
-    # else:
-    #     subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
-    #     subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
+    if os.name == 'nt':
+        subprocess.run(['nasm.exe', '-f', 'win32', asm_file, '-o', obj_file], check=True)
+        subprocess.run(['link', '/SUBSYSTEM:CONSOLE', '/ENTRY:MAIN', obj_file, 'kernel32.lib', '/OUT:' + exe_file], check=True)
+    else:
+        subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
+        subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
 
-    # os.remove(asm_file)
+    os.remove(asm_file)
     os.remove(obj_file)
 
     return exe_file
