@@ -164,7 +164,7 @@ def compile_file(input_file):
     
     if os.name == 'nt':
         subprocess.run(['nasm.exe', '-f', 'win32', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['link', '/SUBSYSTEM:CONSOLE', '/ENTRY:main', '/OUT:' + exe_file, obj_file, 'kernel32.lib'], check=True)
+        subprocess.run(['link', '/subsystem:console', '/entry:main', '/out:' + exe_file, obj_file, 'kernel32.lib'], check=True)
     else:
         subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
         subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
