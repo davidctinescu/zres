@@ -44,7 +44,7 @@ section .text
 main:
     push -11
     call GetStdHandle
-    mov stdout, eax\n"""
+    mov [stdout], eax\n"""
 
     in_main = False
 
@@ -62,11 +62,11 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"""    push dword 0
+                    asm_code += f"""    push 0
     push written
     push len
     push msg_{idx}
-    push stdout
+    push [stdout]
     call WriteConsoleA
     
     """
@@ -137,7 +137,7 @@ _start:\n"""
     return asm_code
 
 def generate_asm(lines):
-    if os.name == 'nt':
+    if os.name == 'posix':
         return generate_asm_windows(lines)
     else:
         return generate_asm_linux(lines)
@@ -160,14 +160,14 @@ def compile_file(input_file):
         f.write(asm_code)
 
     
-    if os.name == 'nt':
-        subprocess.run(['nasm.exe', '-f', 'win32', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['link', '/SUBSYSTEM:CONSOLE', '/ENTRY:MAIN', obj_file, 'kernel32.lib', '/OUT:' + exe_file], check=True)
-    else:
-        subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
+    # if os.name == 'nt':
+    #     subprocess.run(['nasm.exe', '-f', 'win32', asm_file, '-o', obj_file], check=True)
+    #     subprocess.run(['link', '/SUBSYSTEM:CONSOLE', '/ENTRY:MAIN', obj_file, 'kernel32.lib', '/OUT:' + exe_file], check=True)
+    # else:
+    #     subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
+    #     subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
 
-    os.remove(asm_file)
+    # os.remove(asm_file)
     os.remove(obj_file)
 
     return exe_file
