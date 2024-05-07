@@ -44,7 +44,7 @@ section .text
 main:
     push dword -11
     call GetStdHandle
-    mov [stdout], eax\n"""
+    mov stdout, eax\n"""
 
     in_main = False
 
@@ -66,7 +66,7 @@ main:
     push dword written
     push dword len
     push dword msg_{idx}
-    push dword [stdout]
+    push dword stdout
     call WriteConsoleA
     
     """
