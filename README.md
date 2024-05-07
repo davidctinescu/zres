@@ -28,7 +28,7 @@ global main {
 
 ## Windows support:
 - Currently windows is not supported, letting this be a UNIX only programming language (for now)
-- Why? I cant WIN64 to not error out every time i try to compile the file.
+- Why? I cant print to stdout, if anyone knows a fix, please let me know!
 
 ## Author
 windowsbuild3r
