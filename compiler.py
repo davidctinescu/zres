@@ -42,7 +42,8 @@ written resd 1
 section .text
 
 main:
-    call GetStdHandle, -11 
+    push dword -11
+    call GetStdHandle
     mov [stdout], eax\n"""
 
     in_main = False
@@ -61,10 +62,10 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"""push 0
-    push written
-    push len
-    push msg_{idx}
+                    asm_code += f"""    push dword 0
+    push dword written
+    push dword len
+    push dword msg_{idx}
     push dword [stdout]
     call WriteConsoleA
     
