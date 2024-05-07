@@ -68,7 +68,7 @@ main:
     push written
     push len
     push msg_{idx}
-    push dword [stdout]
+    push qword [stdout]
     call WriteConsoleA
     
     """
