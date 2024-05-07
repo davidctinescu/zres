@@ -1,5 +1,5 @@
 global main {
     var my_var = "Hello, world!";
-    out(my_var)
+    out(my_var);
     exit 0;
 }
