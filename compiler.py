@@ -10,7 +10,7 @@ extern ExitProcess
 global main
 
 section .data
-stdout dq 0  ; Change to quadword for 64-bit
+stdout dd 0
     
 """
 
@@ -38,17 +38,16 @@ stdout dq 0  ; Change to quadword for 64-bit
     asm_code += """
 
 section .bss
-written resq 1  ; Change to quadword for 64-bit
+written resq 1
 
 section .text
 
 main:
-    sub rsp, 40  ; Adjust stack for function calls
+    sub rsp, 40 
     
-    ; Get stdout handle
-    mov rcx, -11  ; STD_OUTPUT_HANDLE
+    mov rcx, -11 
     call GetStdHandle
-    mov [stdout], rax  ; Store handle
+    mov [stdout], rax 
     
     """
 
@@ -68,13 +67,13 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"mov edx, len_{idx}\n"
-                    asm_code += f"mov rcx, msg_{idx}\n"
-                    asm_code += f"mov r8, [stdout]\n"
-                    asm_code += f"call WriteConsoleA\n"
+                    asm_code += f"  mov edx, len_{idx}\n"
+                    asm_code += f"  mov rcx, msg_{idx}\n"
+                    asm_code += f"  mov r8, [stdout]\n"
+                    asm_code += f"  call WriteConsoleA\n\n"
             elif "exit" in line:
-                asm_code += f"mov eax, {exit_code}\n"
-                asm_code += f"call ExitProcess\n"
+                asm_code += f"  mov eax, {exit_code}\n"
+                asm_code += f"  call ExitProcess\n"
     
     return asm_code
 
@@ -164,10 +163,10 @@ def compile_file(input_file):
     
     if os.name == 'nt':
         subprocess.run(['nasm.exe', '-f', 'win64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['ld', '-o', exe_file, obj_file, '-lkernel32'], check=True)
+        subprocess.run(['ld', '-o', f".//out//{exe_file}", obj_file, '-lkernel32'], check=True)
     else:
         subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
+        subprocess.run(['ld', obj_file, '-o', f"./out/{exe_file}"], check=True)
 
     os.remove(asm_file)
     os.remove(obj_file)
