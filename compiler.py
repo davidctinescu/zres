@@ -2,85 +2,7 @@ import subprocess
 import sys
 import os
 
-def generate_asm_windows(lines):
-    asm_code = """extern WriteConsoleA
-extern GetStdHandle
-extern ExitProcess
-    
-global main
-
-section.data
-stdout dq 0  ; use dq for 64-bit address
-    
-
-"""
-
-    in_main = False
-
-    for idx, line in enumerate(lines, start=1):
-        if "//" in line:
-            continue
-        if "global main {" in line:
-            in_main = True
-            continue
-        elif in_main:
-            if "}" in line:
-                in_main = False
-                break
-            elif "out" in line:
-                string = line.strip().split("(", 1)[1].split(")", 1)[0]
-                if string.startswith('"') and string.endswith('"'):
-                    string = string[1:-1]
-                    asm_code += f"msg_{idx} db '{string}', 0xA, 0\n"
-                    asm_code += f"len_{idx} equ $ - msg_{idx}\n"
-            elif "exit" in line:
-                exit_code = line.strip().split(" ")[1].rstrip(';')
-
-    asm_code += """
-section.bss
-written resq 1
-
-section.text
-
-main:
-    sub rsp, 40 
-    
-    mov rcx, -11 
-    call GetStdHandle
-    mov [stdout], rax 
-
-    """
-
-    in_main = False
-
-    for idx, line in enumerate(lines, start=1):
-        if "//" in line:
-            continue
-
-        if "global main {" in line:
-            in_main = True
-            continue
-        elif in_main:
-            if "}" in line:
-                in_main = False
-                break
-            elif "out" in line:
-                string = line.strip().split("(", 1)[1].split(")", 1)[0]
-                if string.startswith('"') and string.endswith('"'):
-                    string = string[1:-1]
-                    asm_code += f"  mov rdx, len_{idx}\n"
-                    asm_code += f"      mov rcx, msg_{idx}\n"
-                    asm_code += f"      mov r8, rsi\n" 
-                    asm_code += f"      mov rsi, [stdout]\n" 
-                    asm_code += f"      call WriteConsoleA\n\n"
-            elif "exit" in line:
-                asm_code += f"      mov eax, {exit_code}\n"
-                asm_code += f"      call ExitProcess\n"
-    
-
-    return asm_code
-
-def generate_asm_linux(lines):
+def generate_asm(lines):
     asm_code = """global _start
 
 section .data\n"""
@@ -139,20 +61,11 @@ _start:\n"""
     
     return asm_code
 
-def generate_asm(lines):
-    if os.name == 'nt':
-        return generate_asm_windows(lines)
-    else:
-        return generate_asm_linux(lines)
-
 def compile_file(input_file):
     output_file = os.path.splitext(input_file)[0]
     asm_file = output_file + '.asm'
     obj_file = output_file + '.o'
-    if os.name == 'nt':
-        exe_file = output_file + '.exe'
-    else:
-        exe_file = output_file + '.out'
+    exe_file = output_file + '.out'
     
     with open(input_file, 'r') as f:
         lines = f.readlines()
@@ -162,13 +75,8 @@ def compile_file(input_file):
     with open(asm_file, 'w') as f:
         f.write(asm_code)
 
-    
-    if os.name == 'nt':
-        subprocess.run(['nasm.exe', '-f', 'win64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['ld', '-o', f"{exe_file}", obj_file, '-lkernel32'], check=True)
-    else:
-        subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['ld', obj_file, '-o', f"{exe_file}"], check=True)
+    subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
+    subprocess.run(['ld', obj_file, '-o', f"{exe_file}"], check=True)
 
     os.remove(asm_file)
     os.remove(obj_file)

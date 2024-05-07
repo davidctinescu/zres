@@ -4,7 +4,7 @@
 Simple x86_64 compiler for the ZRES programming language.
 
 ## Usage
-1. Make sure you have NASM and LD installed if you are using a UNIX based system or NASM for Windows and MinGW if you are using Windows.
+1. Make sure you have NASM and LD installed if you are using a UNIX based system.
 2. Run the script with the input file as an argument.
 
 ```bash
@@ -24,6 +24,10 @@ global main {
     exit(0);
 }
 ```
+
+## Windows support:
+- Currently windows is not supported, letting this be a UNIX only programming language (for now)
+- Why? I cant WIN64 to not error out every time i try to compile the file.
 
 ## Author
 windowsbuild3r
