@@ -42,7 +42,7 @@ written resd 1
 section .text
 
 main:
-    push 0FFFFFFF5h
+    push -11
     call GetStdHandle
     mov stdout, eax\n"""
 
