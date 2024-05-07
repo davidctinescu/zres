@@ -160,6 +160,10 @@ section .text:
 global main
 
 main:
+    push -11
+    call GetStdHandle
+    mov edx, eax
+
 """
 
     in_main = False
