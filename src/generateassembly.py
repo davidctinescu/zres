@@ -153,9 +153,9 @@ def generate_asm_windows(lines) -> str:
 
     asm_code += """
 section .text:
-    extern ExitProcess: proc
-    extern GetStdHandle: proc
-    extern WriteConsoleA: proc
+    extern ExitProcess
+    extern GetStdHandle
+    extern WriteConsoleA
 
 global main
 
@@ -185,14 +185,14 @@ main:
                     if string.startswith('"') and string.endswith('"'):
                         string = string[1:-1]
                         asm_code += f"  mov rdx, {len(string)}\n"
-                        asm_code += f"  lea rcx, [msg_{idx} + rip]\n"
+                        asm_code += f"  lea rcx, [rel msg_{idx}]\n"
                         asm_code += f"  call WriteConsoleA\n\n"
                     else:
                         content = variables.get(string)
                         if content is None:
                             raise ValueError(f"Variable '{string}' not declared")
                         asm_code += f"  mov rdx, {len(content)}\n"
-                        asm_code += f"  lea rcx, [{string} + rip]\n"
+                        asm_code += f"  lea rcx, [rel {string}]\n"
                         asm_code += f"  call WriteConsoleA\n\n"
                 else:
                     raise ValueError(f"Line {idx} has the wrong format for outputting")
