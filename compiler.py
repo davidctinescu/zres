@@ -10,7 +10,8 @@ extern ExitProcess
 global main
 
 section .data
-stdout dd 0"""
+stdout dd 0
+"""
 
     in_main = False
 
@@ -29,11 +30,11 @@ stdout dd 0"""
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
                     asm_code += f"msg_{idx} db '{string}', 0xA, 0\n"
+                    asm_code += f"len equ $ - msg_{idx}"
             elif "exit" in line:
                 exit_code = line.strip().split(" ")[1].rstrip(';')
-                asm_code += f"exit_code db '{exit_code}'\n"
     
-    asm_code += """len dd $ - msg_2
+    asm_code += """
 
 section .bss
 written resd 1
@@ -60,10 +61,16 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"    lea rdx, [msg_{idx}]\n"
-                    asm_code += f"    call WriteConsoleA, [stdout], [len], written, 0\n\n"
+                    asm_code += f"""push 0
+    push written
+    push len
+    push msg_{idx}
+    push dword [stdout]
+    call WriteConsoleA
+    
+    """
             elif "exit" in line:
-                asm_code += f"    mov eax, {exit_code}\n"
+                asm_code += f"mov eax, {exit_code}\n"
                 asm_code += f"    call ExitProcess\n"
     
     return asm_code
