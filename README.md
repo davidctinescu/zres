@@ -4,7 +4,7 @@
 Simple x86_64 compiler for the ZRES programming language.
 
 ## Usage
-1. Make sure you have NASM and LD installed if you are using a UNIX based system or MASM (Microsoft Macro Assembler) with NASM for Windows if you are using Windows.
+1. Make sure you have NASM and LD installed if you are using a UNIX based system or NASM for Windows and MinGW if you are using Windows.
 2. Run the script with the input file as an argument.
 
 ```bash
