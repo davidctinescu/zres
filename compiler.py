@@ -9,9 +9,10 @@ extern ExitProcess
     
 global main
 
-section .data
-stdout dd 0
+section.data
+stdout dq 0  ; use dq for 64-bit address
     
+
 """
 
     in_main = False
@@ -34,13 +35,12 @@ stdout dd 0
                     asm_code += f"len_{idx} equ $ - msg_{idx}\n"
             elif "exit" in line:
                 exit_code = line.strip().split(" ")[1].rstrip(';')
-    
-    asm_code += """
 
-section .bss
+    asm_code += """
+section.bss
 written resq 1
 
-section .text
+section.text
 
 main:
     sub rsp, 40 
@@ -48,7 +48,7 @@ main:
     mov rcx, -11 
     call GetStdHandle
     mov [stdout], rax 
-    
+
     """
 
     in_main = False
@@ -56,6 +56,7 @@ main:
     for idx, line in enumerate(lines, start=1):
         if "//" in line:
             continue
+
         if "global main {" in line:
             in_main = True
             continue
@@ -67,16 +68,17 @@ main:
                 string = line.strip().split("(", 1)[1].split(")", 1)[0]
                 if string.startswith('"') and string.endswith('"'):
                     string = string[1:-1]
-                    asm_code += f"  mov edx, len_{idx}\n"
-                    asm_code += f"  mov rcx, msg_{idx}\n"
-                    asm_code += f"  mov r8, [stdout]\n"
-                    asm_code += f"  call WriteConsoleA\n\n"
+                    asm_code += f"  mov rdx, len_{idx}\n"
+                    asm_code += f"      mov rcx, msg_{idx}\n"
+                    asm_code += f"      mov r8, rsi\n" 
+                    asm_code += f"      mov rsi, [stdout]\n" 
+                    asm_code += f"      call WriteConsoleA\n\n"
             elif "exit" in line:
-                asm_code += f"  mov eax, {exit_code}\n"
-                asm_code += f"  call ExitProcess\n"
+                asm_code += f"      mov eax, {exit_code}\n"
+                asm_code += f"      call ExitProcess\n"
     
-    return asm_code
 
+    return asm_code
 
 def generate_asm_linux(lines):
     asm_code = """global _start
