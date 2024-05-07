@@ -147,7 +147,7 @@ def generate_asm(lines):
 def compile_file(input_file):
     output_file = os.path.splitext(input_file)[0]
     asm_file = output_file + '.asm'
-    obj_file = output_file + '.o'
+    obj_file = output_file + '.obj'
     exe_file = output_file + '.out'
     
     with open(input_file, 'r') as f:
