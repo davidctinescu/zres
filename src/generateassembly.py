@@ -153,9 +153,9 @@ def generate_asm_windows(lines) -> str:
 
     asm_code += """
 section .text:
-    extern ExitProcess
-    extern GetStdHandle
-    extern WriteConsoleA
+    extern ExitProcess: proc
+    extern GetStdHandle: proc
+    extern WriteConsoleA: proc
 
 global main
 
