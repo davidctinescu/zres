@@ -1,2 +1,3 @@
 ./src/main.out
-./src/__pycache__
+./src/main.asm
+./src/__pycache__/

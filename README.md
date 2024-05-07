@@ -15,7 +15,7 @@ python ./src/compiler.py <input_file>
 - Delimit lines with `;`.
 - The file must have a `global main` declaration to mark the beginning of the main function.
 - Use `out("string")` to output strings.
-- Use `exit code` to specify the exit code.
+- Use `exit (code)` to exit with the code.
 
 Example:
 ```plaintext
