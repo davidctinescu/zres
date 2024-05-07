@@ -2,9 +2,6 @@ import subprocess
 import sys
 import os
 
-RED = "\033[91m"
-RESET = "\033[0m"
-
 def generate_asm(lines):
     asm_code = """global _start
 
@@ -77,10 +74,14 @@ def compile_file(input_file):
     
     with open(asm_file, 'w') as f:
         f.write(asm_code)
+
     
-    subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
-    
-    subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
+    if os.name == 'nt':
+        subprocess.run(['ml64', '/c', '/Fo', obj_file, asm_file], check=True)
+        subprocess.run(['link', '/SUBSYSTEM:CONSOLE', '/OUT:' + exe_file, obj_file], check=True)
+    else:
+        subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
+        subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
 
     os.remove(asm_file)
     os.remove(obj_file)
@@ -96,7 +97,7 @@ def main():
     try:
         exe_file = compile_file(input_file)
     except Exception as e:
-        print(f"{RED}Error: {e}{RESET}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
