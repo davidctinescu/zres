@@ -28,7 +28,7 @@ def tokenizer_ir(lines):
         # Check for variables
         if "let" in line:
             var_name = line.split()[1].rstrip(";")
-            var_value = re.search(r'("[^"]*"|\d+)', line).group(1)
+            var_value = re.search(r'("[^"]*"or\d+)', line).group(1)
             # Variable is a string
             if var_value.startswith('"') and var_value.endswith('"'):
                 var_value = var_value[1:-1]
@@ -182,14 +182,14 @@ def generate_assembly(lines, entry_point) -> str:
     ir_code, _, variables = tokenizer_ir(lines)
     architecture = platform.machine()
     if platform.system() == "Windows":
-        if architecture == "x86_64" | architecture == "amd64" | architecture == "AMD64":
+        if architecture == "x86_64" or architecture == "amd64" or architecture == "AMD64":
             asm_code = generate_assembly_amd64_windows(ir_code, entry_point, variables)
         else:
             raise NotImplementedError("win32 is currently an unsupported architecture")
     elif platform.system() == "Linux":
         if "arm" in architecture:
             raise NotImplementedError(f"{architecture} is currently an unsupported architecture")
-        elif architecture == "x86_64" | architecture == "amd64" | architecture == "AMD64":
+        elif architecture == "x86_64" or architecture == "amd64" or architecture == "AMD64":
             asm_code = generate_assembly_amd64_linux(ir_code, entry_point, variables)
         else:
             raise NotImplementedError("x86 is currently an unsupported architecture")
