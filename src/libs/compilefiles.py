@@ -1,13 +1,14 @@
 import subprocess
 import os
+import platform
 from .assembly import generate_assembly, tokenizer_ir
 
 def compile_file(input_file):
     output_file = os.path.splitext(input_file)[0]
     asm_file = output_file + '.asm'
     obj_file = output_file + '.o'
-    if os.name == 'nt':
-        raise ValueError("Windows not yet implemented!")
+    if platform.system() == "Windows":
+        exe_file = output_file + '.exe'
     else:
         exe_file = output_file + '.out'
     
@@ -21,8 +22,9 @@ def compile_file(input_file):
     with open(asm_file, 'w') as f:
         f.write(asm_code)
 
-    if os.name == 'nt':
-        raise ValueError("Windows not yet implemented!")
+    if platform.system() == "Windows":
+        subprocess.run(['nasm', '-f', 'win64', asm_file, '-o', obj_file], check=True)
+        subprocess.run(['gcc','-e', entry_point, obj_file, '-o', exe_file, '-nostartfiles', '-nostdlib', '-lkernel32'], check=True)
     else:
         subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
         subprocess.run(['ld','-e', entry_point, obj_file, '-o', exe_file], check=True)

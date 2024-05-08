@@ -1,5 +1,6 @@
 import re
 import os
+import platform
 
 def tokenizer_ir(lines):
     ir_code = []
@@ -57,9 +58,11 @@ def tokenizer_ir(lines):
     return ir_code, entry_point, variables
 
 def generate_assembly_amd64_linux(ir_code, entry_point, variables):
-    asm_code = """section .data\n"""
+    asm_code = """bits 64
+    section .data\n"""
 
     data_idx = 0
+    idx = 0
 
     for instruction in ir_code:
         if instruction[0] == "var":
@@ -81,9 +84,10 @@ def generate_assembly_amd64_linux(ir_code, entry_point, variables):
             string = instruction[1]
             asm_code += f"  mov rax, 1\n"
             asm_code += f"  mov rdi, 1\n"
-            asm_code += f"  lea rsi, [rel msg_{data_idx -1}]\n" 
+            asm_code += f"  lea rsi, [rel msg_{idx -1}]\n" 
             asm_code += f"  mov rdx, {len(string) + 1}\n"
             asm_code += f"  syscall\n\n"
+            idx += 1
         elif instruction[0] == "out_int":
             int_value = instruction[1]
             asm_code += f"  mov rax, 1\n"
@@ -110,8 +114,85 @@ def generate_assembly_amd64_linux(ir_code, entry_point, variables):
 
     return asm_code
 
+def generate_assembly_amd64_windows(ir_code, entry_point, variables):
+    asm_code = """bits 64
+default rel\n
+section .data\n"""
+
+    data_idx = 0
+    idx = 0
+
+    for instruction in ir_code:
+        if instruction[0] == "var":
+            var_name, var_value = instruction[1:]
+            asm_code += f"  {var_name} db '{var_value}', 0xA, 0\n"
+            data_idx += 1
+        if instruction[0] == "out_string":
+            string = instruction[1]
+            asm_code += f"  msg_{data_idx} db '{string}', 0xA, 0\n"
+            data_idx += 1
+
+    asm_code += """section .text
+  extern ExitProcess
+  extern WriteConsoleA
+  import ExitProcess kernel32.dll
+  import WriteConsoleA kernel32.dll\n"""
+    asm_code += f"""  global {entry_point}\n\n"""
+
+    asm_code += f"{entry_point}:\n"
+
+    for instruction in ir_code:
+        if instruction[0] == "out_string":
+            string = instruction[1]
+            asm_code += f"  mov rcx, -11\n"
+            asm_code += f"  Call GetStdHandle\n"
+            asm_code += f"  mov rcx, rax\n"
+            asm_code += f"  mov rdx, [msg_{idx}]\n"
+            asm_code += f"  mov r8, {len(string) + 1}\n" 
+            asm_code += f"  call WriteConsoleA\n\n"
+            idx += 1
+        elif instruction[0] == "out_int":
+            int_value = instruction[1]
+            asm_code += f"  mov rcx, -11\n"
+            asm_code += f"  Call GetStdHandle\n"
+            asm_code += f"  mov rcx, rax\n"
+            asm_code += f"  mov rdx, {int_value}\n"
+            asm_code += f"  mov r8, 10\n" 
+            asm_code += f"  call WriteConsoleA\n\n"
+        elif instruction[0] == "out_var":
+            var_name = instruction[1]
+            content = variables.get(var_name)
+            if content is None:
+                raise ValueError(f"Variable '{var_name}' not declared")
+            asm_code += f"  mov rcx, -11\n"
+            asm_code += f"  Call GetStdHandle\n"
+            asm_code += f"  mov rcx, rax\n"
+            asm_code += f"  mov rdx, {var_name}\n"
+            asm_code += f"  mov r8, {len(content) - 1}\n" 
+            asm_code += f"  call WriteConsoleA\n\n"
+        elif instruction[0] == "exit":
+            exit_code = instruction[1]
+            asm_code += f"  mov rcx, {exit_code}\n"
+            asm_code += f"  call ExitProcess\n"
+
+    return asm_code
+
 def generate_assembly(lines, entry_point) -> str:
     asm_code = None
     ir_code, _, variables = tokenizer_ir(lines)
-    asm_code = generate_assembly_amd64_linux(ir_code, entry_point, variables)
+    architecture = platform.machine()
+    if platform.system() == "Windows":
+        if architecture == "x86_64":
+            asm_code = generate_assembly_amd64_windows(ir_code, entry_point, variables)
+        else:
+            raise NotImplementedError("win32 is currently an unsupported architecture")
+    elif platform.system() == "Linux":
+        if "arm" in architecture:
+            raise NotImplementedError(f"{architecture} is currently an unsupported architecture")
+        elif architecture == "x86_64":
+            asm_code = generate_assembly_amd64_linux(ir_code, entry_point, variables)
+        else:
+            raise NotImplementedError("x86 is currently an unsupported architecture")
+    else:
+        raise NotImplementedError("Unsupported platform")
     return asm_code
