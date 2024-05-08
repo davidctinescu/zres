@@ -1,3 +1,5 @@
+src/main.o
 src/main.out
 src/main.asm
 src/__pycache__/
+src/libs/__pycache__/

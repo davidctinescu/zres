@@ -1,6 +1,6 @@
 import subprocess
 import os
-from generateassembly import generate_asm
+from .assembly import generate_assembly, tokenizer_ir
 
 def compile_file(input_file):
     output_file = os.path.splitext(input_file)[0]
@@ -14,7 +14,9 @@ def compile_file(input_file):
     with open(input_file, 'r') as f:
         lines = f.readlines()
 
-    asm_code = generate_asm(lines)
+    _, entry_point, _ = tokenizer_ir(lines)
+
+    asm_code = generate_assembly(lines, entry_point)
     
     with open(asm_file, 'w') as f:
         f.write(asm_code)
@@ -23,7 +25,7 @@ def compile_file(input_file):
         raise ValueError("Windows not yet implemented!")
     else:
         subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['ld', obj_file, '-o', exe_file], check=True)
+        subprocess.run(['ld','-e', entry_point, obj_file, '-o', exe_file], check=True)
 
     os.remove(asm_file)
     os.remove(obj_file)
