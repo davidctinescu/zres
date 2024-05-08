@@ -126,10 +126,12 @@ section .data\n"""
         if instruction[0] == "var":
             var_name, var_value = instruction[1:]
             asm_code += f"  {var_name} db '{var_value}', 0xA, 0\n"
+            asm_code += f"  {var_name}_len equ $ - {var_name}"
             data_idx += 1
         if instruction[0] == "out_string":
             string = instruction[1]
             asm_code += f"  msg_{data_idx} db '{string}', 0xA, 0\n"
+            asm_code += f"  msg_{data_idx}_len equ $ - msg_{data_idx}"
             data_idx += 1
 
     asm_code += """section .text
@@ -143,35 +145,35 @@ section .data\n"""
     for instruction in ir_code:
         if instruction[0] == "out_string":
             string = instruction[1]
-            asm_code += f"  mov rcx, -11\n"
+            asm_code += f"  mov  rcx, -11\n"
             asm_code += f"  Call GetStdHandle\n"
-            asm_code += f"  mov rcx, rax\n"
-            asm_code += f"  mov rdx, [msg_{idx}]\n"
-            asm_code += f"  mov r8, {len(string) + 1}\n" 
+            asm_code += f"  mov  rcx, rax\n"
+            asm_code += f"  mov  rdx, [msg_{idx}]\n"
+            asm_code += f"  mov  r8,  msg_{idx}_len\n" 
             asm_code += f"  call WriteConsoleA\n\n"
             idx += 1
         elif instruction[0] == "out_int":
             int_value = instruction[1]
-            asm_code += f"  mov rcx, -11\n"
+            asm_code += f"  mov  rcx, -11\n"
             asm_code += f"  Call GetStdHandle\n"
-            asm_code += f"  mov rcx, rax\n"
-            asm_code += f"  mov rdx, {int_value}\n"
-            asm_code += f"  mov r8, 10\n" 
+            asm_code += f"  mov  rcx, rax\n"
+            asm_code += f"  mov  rdx, {int_value}\n"
+            asm_code += f"  mov  r8,  10\n" 
             asm_code += f"  call WriteConsoleA\n\n"
         elif instruction[0] == "out_var":
             var_name = instruction[1]
             content = variables.get(var_name)
             if content is None:
                 raise ValueError(f"Variable '{var_name}' not declared")
-            asm_code += f"  mov rcx, -11\n"
+            asm_code += f"  mov  rcx, -11\n"
             asm_code += f"  Call GetStdHandle\n"
-            asm_code += f"  mov rcx, rax\n"
-            asm_code += f"  mov rdx, {var_name}\n"
-            asm_code += f"  mov r8, {len(content) - 1}\n" 
+            asm_code += f"  mov  rcx, rax\n"
+            asm_code += f"  mov  rdx, {var_name}\n"
+            asm_code += f"  mov  r8,  {var_name}_len\n" 
             asm_code += f"  call WriteConsoleA\n\n"
         elif instruction[0] == "exit":
             exit_code = instruction[1]
-            asm_code += f"  mov rcx, {exit_code}\n"
+            asm_code += f"  mov  rcx, {exit_code}\n"
             asm_code += f"  call ExitProcess\n"
 
     return asm_code
