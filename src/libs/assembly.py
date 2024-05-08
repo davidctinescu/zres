@@ -182,14 +182,14 @@ def generate_assembly(lines, entry_point) -> str:
     ir_code, _, variables = tokenizer_ir(lines)
     architecture = platform.machine()
     if platform.system() == "Windows":
-        if architecture == "x86_64" | architecture == "amd64":
+        if architecture == "x86_64" | architecture == "amd64" | architecture == "AMD64":
             asm_code = generate_assembly_amd64_windows(ir_code, entry_point, variables)
         else:
             raise NotImplementedError("win32 is currently an unsupported architecture")
     elif platform.system() == "Linux":
         if "arm" in architecture:
             raise NotImplementedError(f"{architecture} is currently an unsupported architecture")
-        elif architecture == "x86_64" | architecture == "amd64":
+        elif architecture == "x86_64" | architecture == "amd64" | architecture == "AMD64":
             asm_code = generate_assembly_amd64_linux(ir_code, entry_point, variables)
         else:
             raise NotImplementedError("x86 is currently an unsupported architecture")
