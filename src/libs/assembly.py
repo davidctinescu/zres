@@ -58,8 +58,7 @@ def tokenizer_ir(lines):
     return ir_code, entry_point, variables
 
 def generate_assembly_amd64_linux(ir_code, entry_point, variables):
-    asm_code = """bits 64
-    section .data\n"""
+    asm_code = """section .data\n"""
 
     data_idx = 0
     idx = 0
@@ -84,7 +83,7 @@ def generate_assembly_amd64_linux(ir_code, entry_point, variables):
             string = instruction[1]
             asm_code += f"  mov rax, 1\n"
             asm_code += f"  mov rdi, 1\n"
-            asm_code += f"  lea rsi, [rel msg_{idx -1}]\n" 
+            asm_code += f"  lea rsi, [rel msg_{idx}]\n" 
             asm_code += f"  mov rdx, {len(string) + 1}\n"
             asm_code += f"  syscall\n\n"
             idx += 1
