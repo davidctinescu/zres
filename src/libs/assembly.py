@@ -126,12 +126,12 @@ section .data\n"""
         if instruction[0] == "var":
             var_name, var_value = instruction[1:]
             asm_code += f"  {var_name} db '{var_value}', 0xA, 0\n"
-            asm_code += f"  {var_name}_len equ $ - {var_name}"
+            asm_code += f"  {var_name}_len equ $ - {var_name}\n"
             data_idx += 1
         if instruction[0] == "out_string":
             string = instruction[1]
             asm_code += f"  msg_{data_idx} db '{string}', 0xA, 0\n"
-            asm_code += f"  msg_{data_idx}_len equ $ - msg_{data_idx}"
+            asm_code += f"  msg_{data_idx}_len equ $ - msg_{data_idx}\n"
             data_idx += 1
 
     asm_code += """section .text
