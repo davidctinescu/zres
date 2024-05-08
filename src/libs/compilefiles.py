@@ -24,7 +24,7 @@ def compile_file(input_file):
 
     if platform.system() == "Windows":
         subprocess.run(['nasm', '-f', 'win64', asm_file, '-o', obj_file], check=True)
-        subprocess.run(['gcc','-e', entry_point, obj_file, '-o', exe_file, '-nostartfiles', '-nostdlib', '-lkernel32'], check=True)
+        subprocess.run(['ld','-e', entry_point, obj_file, 'kernel32.dll', '-o', exe_file], check=True)
     else:
         subprocess.run(['nasm', '-f', 'elf64', asm_file, '-o', obj_file], check=True)
         subprocess.run(['ld','-e', entry_point, obj_file, '-o', exe_file], check=True)
