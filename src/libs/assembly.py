@@ -135,8 +135,7 @@ section .data\n"""
     asm_code += """section .text
   extern ExitProcess
   extern WriteConsoleA
-  import ExitProcess kernel32.dll
-  import WriteConsoleA kernel32.dll\n"""
+  extern GetStdHandle\n"""
     asm_code += f"""  global {entry_point}\n\n"""
 
     asm_code += f"{entry_point}:\n"
