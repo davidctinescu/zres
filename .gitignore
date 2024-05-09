@@ -1,5 +1,19 @@
+# clean up after running
 src/main.o
 src/main.out
 src/main.asm
+main.asm
+main.o
+main.out
 src/__pycache__/
 src/libs/__pycache__/
+
+# preparing for rust instead of python..!
+src/main.py
+src/libs/assembly.py
+src/libs/compilefiles.py
+src/libs/__init__.py
+src/libs
+
+# not to bloat
+target/
