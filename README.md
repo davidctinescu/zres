@@ -8,7 +8,7 @@ Simple x86_64 compiler for the ZRES programming language.
 2. Run the script with the input file as an argument.
 
 ```bash
-python main.py <input_file>
+zres <input_file>
 ```
 
 Example:
