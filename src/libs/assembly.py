@@ -124,12 +124,12 @@ section .data\n"""
     for instruction in ir_code:
         if instruction[0] == "var":
             var_name, var_value = instruction[1:]
-            asm_code += f"  {var_name} db '{var_value}', 0xA, 0\n"
+            asm_code += f"  {var_name} db '{var_value}', 0x0D, 0x0A, 0\n"
             asm_code += f"  {var_name}_len equ $ - {var_name}\n"
             data_idx += 1
         if instruction[0] == "out_string":
             string = instruction[1]
-            asm_code += f"  msg_{data_idx} db '{string}', 0xA, 0\n"
+            asm_code += f"  msg_{data_idx} db '{string}', 0x0D, 0x0A, 0\n"
             asm_code += f"  msg_{data_idx}_len equ $ - msg_{data_idx}\n"
             data_idx += 1
 
@@ -149,7 +149,9 @@ section .data\n"""
             asm_code += f"  mov  rcx, rax\n"
             asm_code += f"  mov  rdx, [msg_{idx}]\n"
             asm_code += f"  mov  r8,  msg_{idx}_len\n" 
-            asm_code += f"  call WriteConsoleA\n\n"
+            asm_code += f"  sub  rsp, 40\n" 
+            asm_code += f"  call WriteConsoleA\n"
+            asm_code += f"  add  rsp, 40\n\n"
             idx += 1
         elif instruction[0] == "out_int":
             int_value = instruction[1]
@@ -158,7 +160,9 @@ section .data\n"""
             asm_code += f"  mov  rcx, rax\n"
             asm_code += f"  mov  rdx, {int_value}\n"
             asm_code += f"  mov  r8,  10\n" 
-            asm_code += f"  call WriteConsoleA\n\n"
+            asm_code += f"  sub  rsp, 40\n" 
+            asm_code += f"  call WriteConsoleA\n"
+            asm_code += f"  add  rsp, 40\n\n"
         elif instruction[0] == "out_var":
             var_name = instruction[1]
             content = variables.get(var_name)
@@ -167,9 +171,11 @@ section .data\n"""
             asm_code += f"  mov  rcx, -11\n"
             asm_code += f"  Call GetStdHandle\n"
             asm_code += f"  mov  rcx, rax\n"
-            asm_code += f"  mov  rdx, {var_name}\n"
-            asm_code += f"  mov  r8,  {var_name}_len\n" 
-            asm_code += f"  call WriteConsoleA\n\n"
+            asm_code += f"  mov  rdx, [{var_name}]\n"
+            asm_code += f"  mov  r8,  {var_name}_len\n"
+            asm_code += f"  sub  rsp, 40\n" 
+            asm_code += f"  call WriteConsoleA\n"
+            asm_code += f"  add  rsp, 40\n\n"
         elif instruction[0] == "exit":
             exit_code = instruction[1]
             asm_code += f"  mov  rcx, {exit_code}\n"
@@ -186,7 +192,7 @@ def generate_assembly(lines, entry_point) -> str:
             asm_code = generate_assembly_amd64_windows(ir_code, entry_point, variables)
         else:
             raise NotImplementedError("win32 is currently an unsupported architecture")
-    elif platform.system() == "Linux":
+    elif platform.system() == "Windows":
         if "arm" in architecture:
             raise NotImplementedError(f"{architecture} is currently an unsupported architecture")
         elif architecture == "x86_64" or architecture == "amd64" or architecture == "AMD64":
