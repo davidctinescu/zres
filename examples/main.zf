@@ -1,8 +1,0 @@
-function greet() {
-    out("Hello, world from a function!");
-}
-
-global main {
-    greet();
-    exit(0);
-}

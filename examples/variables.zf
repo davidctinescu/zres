@@ -1,0 +1,11 @@
+// you can use a different function name for the entry point, make sure its global
+global _start {
+    let var1 = "Hello, world!";
+    out(var1);
+
+    let var2 = 10;
+    out(var2);
+    exit(0);
+}
+
+//this example is model to change!

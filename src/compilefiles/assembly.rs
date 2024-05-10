@@ -1,3 +1,4 @@
+use core::panic;
 use std::collections::HashMap;
 
 pub fn tokenizer_ir(
@@ -11,7 +12,7 @@ pub fn tokenizer_ir(
     let mut ir_code = Vec::new();
     let mut variables = HashMap::new();
     let mut entry_point = String::new();
-    let mut functions = HashMap::new(); // New HashMap to store function names and their corresponding lines
+    let mut functions = HashMap::new();
 
     for (idx, line) in lines.iter().enumerate().map(|(idx, &line)| (idx + 1, line)) {
         if line.trim().is_empty() {
@@ -55,7 +56,7 @@ pub fn tokenizer_ir(
             }
         }
 
-        if line.contains("let") {
+        if line.contains("const") {
             let var_name = line
                 .split_whitespace()
                 .nth(1)
@@ -69,12 +70,14 @@ pub fn tokenizer_ir(
                 .as_str()
                 .to_string();
             if var_value.starts_with('"') && var_value.ends_with('"') {
+                // string
                 let var_value = var_value.trim_matches('"').to_string();
                 variables.insert(var_name.clone(), var_value.clone());
-                ir_code.push(("var".to_string(), var_name.clone(), var_value));
+                ir_code.push(("var_string".to_string(), var_name.clone(), var_value));
             } else {
+                // int
                 variables.insert(var_name.clone(), var_value.clone());
-                ir_code.push(("var".to_string(), var_name.clone(), var_value));
+                ir_code.push(("var_int".to_string(), var_name.clone(), var_value));
             }
         } else if line.contains("out") {
             let output_content = regex::Regex::new(r#"out\((.*?)\)"#)
@@ -94,13 +97,34 @@ pub fn tokenizer_ir(
                 ));
             } else {
                 if !variables.contains_key(&output_content) {
-                    panic!("{}", format!("Variable '{}' not declared", output_content));
+                    panic!("Variable '{}' not declared", output_content);
+                } else {
+                    if let Some((_, var_name, _)) =
+                        ir_code.iter().find(|(s, _, _)| s == "var_string")
+                    {
+                        if let Some(content) = variables.get(var_name) {
+                            ir_code.push((
+                                "out_var_string".to_string(),
+                                var_name.clone(),
+                                content.clone(),
+                            ));
+                        } else {
+                            panic!("Variable '{}' not declared", var_name);
+                        }
+                    } else if let Some((_, var_name, _)) =
+                        ir_code.iter().find(|(s, _, _)| s == "var_int")
+                    {
+                        if let Some(content) = variables.get(var_name) {
+                            ir_code.push((
+                                "out_var_int".to_string(),
+                                var_name.clone(),
+                                content.clone(),
+                            ));
+                        } else {
+                            panic!("Variable '{}' not found", var_name);
+                        }
+                    }
                 }
-                ir_code.push((
-                    "out_var".to_string(),
-                    output_content.clone(),
-                    "".to_string(),
-                ));
             }
         } else if line.contains("exit") {
             let exit_code = regex::Regex::new(r#"exit\((.*?)\)"#)
@@ -110,10 +134,12 @@ pub fn tokenizer_ir(
                 .trim()
                 .to_string();
             ir_code.push(("exit".to_string(), exit_code.clone(), "".to_string()));
+        } else {
+            panic!("Unknown operand at line '{}'", idx);
         }
     }
 
-    (ir_code, entry_point, variables, functions) // Include functions in the return tuple
+    (ir_code, entry_point, variables, functions)
 }
 
 pub fn generate_assembly_amd64_linux(
@@ -129,9 +155,14 @@ pub fn generate_assembly_amd64_linux(
 
     for instruction in ir_code.iter() {
         match instruction.0.as_str() {
-            "var" => {
+            "var_string" => {
                 let (var_name, var_value) = (&instruction.1, &instruction.2);
                 asm_code.push_str(&format!("  {} db '{}', 0xA, 0\n\n", var_name, var_value));
+                data_idx += 1;
+            }
+            "var_int" => {
+                let (var_name, var_value) = (&instruction.1, &instruction.2);
+                asm_code.push_str(&format!("  {} dd {}\n\n", var_name, var_value));
                 data_idx += 1;
             }
             "out_string" => {
@@ -167,13 +198,21 @@ pub fn generate_assembly_amd64_linux(
                 asm_code.push_str("  mov rdx, 10\n");
                 asm_code.push_str("  syscall\n\n");
             }
-            "out_var" => {
+            "out_var_string" => {
                 let var_name = &instruction.1;
                 let content = variables.get(var_name).unwrap();
                 asm_code.push_str("  mov rax, 1\n");
                 asm_code.push_str("  mov rdi, 1\n");
-                asm_code.push_str(&format!("  mov rsi, {}\n", var_name));
+                asm_code.push_str(&format!("  lea rsi, [rel {}]\n", var_name));
                 asm_code.push_str(&format!("  mov rdx, {}\n", content.len() + 1));
+                asm_code.push_str("  syscall\n\n");
+            }
+            "out_var_int" => {
+                let var_name = &instruction.1;
+                asm_code.push_str("  mov rax, 1\n");
+                asm_code.push_str("  mov rdi, 1\n");
+                asm_code.push_str(&format!("  mov rsi, {}\n", var_name));
+                asm_code.push_str("  mov rdx, 10\n");
                 asm_code.push_str("  syscall\n\n");
             }
             "exit" => {

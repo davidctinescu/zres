@@ -1,0 +1,11 @@
+function func() {
+    out("Hello world from a func!");
+}
+
+global main {
+    func();
+    exit(0);
+}
+
+// this example is model to change
+// currently, the assembly generator parses functions as code inside the main function (global main)

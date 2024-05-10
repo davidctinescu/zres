@@ -64,7 +64,7 @@ pub fn compile_file(input_file: &str) -> Result<String, String> {
         return Err(format!("{}", err));
     }
 
-    fs::remove_file(&asm_file).ok();
+    // fs::remove_file(&asm_file).ok();
     fs::remove_file(&obj_file).ok();
 
     Ok(exe_file)

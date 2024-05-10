@@ -1,0 +1,4 @@
+global main {
+    out("Hello, world!");
+    exit(0);
+}
