@@ -6,12 +6,18 @@ pub fn tokenizer_ir(
     Vec<(String, String, String)>,
     String,
     HashMap<String, String>,
+    HashMap<String, usize>,
 ) {
     let mut ir_code = Vec::new();
     let mut variables = HashMap::new();
     let mut entry_point = String::new();
+    let mut functions = HashMap::new(); // New HashMap to store function names and their corresponding lines
 
     for (idx, line) in lines.iter().enumerate().map(|(idx, &line)| (idx + 1, line)) {
+        if line.trim().is_empty() {
+            continue;
+        }
+
         if line.trim().starts_with("//") {
             continue;
         }
@@ -31,6 +37,16 @@ pub fn tokenizer_ir(
                         .unwrap()
                         .trim_end_matches('{')
                         .to_string();
+                    continue;
+                }
+                if line.contains("function") {
+                    let function_name = line
+                        .split_whitespace()
+                        .nth(1)
+                        .unwrap()
+                        .trim_end_matches('{')
+                        .to_string();
+                    functions.insert(function_name.clone(), idx);
                     continue;
                 }
                 continue;
@@ -97,13 +113,14 @@ pub fn tokenizer_ir(
         }
     }
 
-    (ir_code, entry_point, variables)
+    (ir_code, entry_point, variables, functions) // Include functions in the return tuple
 }
 
 pub fn generate_assembly_amd64_linux(
     ir_code: Vec<(String, String, String)>,
     entry_point: String,
     variables: HashMap<String, String>,
+    _functions: HashMap<String, usize>,
 ) -> String {
     let mut asm_code = String::from("section .data\n");
 
@@ -174,14 +191,19 @@ pub fn generate_assembly_amd64_linux(
 }
 
 pub fn generate_assembly(lines: &[&str], entry_point: &str) -> String {
-    let (ir_code, _, variables) = tokenizer_ir(lines);
+    let (ir_code, _, variables, functions) = tokenizer_ir(lines);
     let architecture = std::env::consts::ARCH;
     let platform = std::env::consts::OS;
 
     match platform {
         "linux" => {
             if architecture == "x86_64" || architecture == "amd64" || architecture == "x86-64" {
-                generate_assembly_amd64_linux(ir_code, entry_point.to_string(), variables)
+                generate_assembly_amd64_linux(
+                    ir_code,
+                    entry_point.to_string(),
+                    variables,
+                    functions,
+                )
             } else {
                 panic!("Unsupported architecture for Linux");
             }

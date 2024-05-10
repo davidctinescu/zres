@@ -18,7 +18,7 @@ pub fn compile_file(input_file: &str) -> Result<String, String> {
     let input_content = fs::read_to_string(input_file).map_err(|e| format!("{}", e))?;
     let lines: Vec<&str> = input_content.lines().collect();
 
-    let (_, entry_point, _) = assembly::tokenizer_ir(&lines);
+    let (_, entry_point, _, _) = assembly::tokenizer_ir(&lines);
 
     let asm_code = assembly::generate_assembly(&lines, &entry_point);
 
