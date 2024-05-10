@@ -12,9 +12,17 @@ pub fn tokenizer_ir(
     let mut entry_point = String::new();
 
     for (idx, line) in lines.iter().enumerate().map(|(idx, &line)| (idx + 1, line)) {
-        // Check for delimiter
+        if line.trim().starts_with("//") {
+            continue;
+        }
+
+        let line = if let Some(pos) = line.find("//") {
+            &line[..pos]
+        } else {
+            line
+        };
+
         if !line.contains(';') {
-            // Check for function
             if line.contains('{') || line.contains('}') {
                 if line.contains("global") {
                     entry_point = line
@@ -27,15 +35,10 @@ pub fn tokenizer_ir(
                 }
                 continue;
             } else {
-                // Error: no operand
                 panic!("{}", format!("Cannot resolve operand at line {}", idx));
             }
         }
 
-        // Parse comments
-        let line = line.split("//").next().unwrap_or("");
-
-        // Check for variables
         if line.contains("let") {
             let var_name = line
                 .split_whitespace()
@@ -49,7 +52,6 @@ pub fn tokenizer_ir(
                 .unwrap()
                 .as_str()
                 .to_string();
-            // Variable is a string
             if var_value.starts_with('"') && var_value.ends_with('"') {
                 let var_value = var_value.trim_matches('"').to_string();
                 variables.insert(var_name.clone(), var_value.clone());
@@ -58,9 +60,7 @@ pub fn tokenizer_ir(
                 variables.insert(var_name.clone(), var_value.clone());
                 ir_code.push(("var".to_string(), var_name.clone(), var_value));
             }
-        }
-        // Check for outputting to std
-        else if line.contains("out") {
+        } else if line.contains("out") {
             let output_content = regex::Regex::new(r#"out\((.*?)\)"#)
                 .unwrap()
                 .captures(&line)

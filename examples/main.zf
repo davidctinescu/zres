@@ -1,4 +1,5 @@
 global main {
     out("Hello, world!");
+    // printing hello world!
     exit(0);
 }

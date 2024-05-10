@@ -42,8 +42,8 @@ pub fn compile_file(input_file: &str) -> Result<String, String> {
         .status();
 
     if let Err(err) = nasm_output {
-        fs::remove_file(&asm_file).ok();
         fs::remove_file(&obj_file).ok();
+        println!("Could not assemble!");
         return Err(format!("{}", err));
     }
 
@@ -58,9 +58,9 @@ pub fn compile_file(input_file: &str) -> Result<String, String> {
         .status();
 
     if let Err(err) = ld_output {
-        fs::remove_file(&asm_file).ok();
         fs::remove_file(&obj_file).ok();
         fs::remove_file(&exe_file).ok();
+        println!("Could not link!");
         return Err(format!("{}", err));
     }
 

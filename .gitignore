@@ -5,6 +5,9 @@ src/main.asm
 main.asm
 main.o
 main.out
+out/main.o
+out/main.asm
+out/main.out
 src/__pycache__/
 src/libs/__pycache__/
 
