@@ -19,4 +19,12 @@ src/libs/__init__.py
 src/libs
 
 # not to bloat
-target/
+target/debug/
+target/CACHEDIR.TAG
+target/.rustc_info.json
+target/release/.fingerprint
+target/release/build
+target/release/deps
+target/release/incremental
+target/release/.cargo-lock
+target/release/zres.d
